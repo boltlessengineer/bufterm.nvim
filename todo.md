@@ -1,0 +1,2 @@
+- [ ] Telescope support
+- [ ] add comment in term.cmd to show terminal id
