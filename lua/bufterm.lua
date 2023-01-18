@@ -9,15 +9,33 @@ local M = {}
 function M.setup(conf)
   config.set(conf)
 
+  require('bufterm.autocmds')
+
   vim.api.nvim_create_user_command("BufTermEnter", function()
     -- check if current buftype is *NOT* 'terminal'
-    if vim.bo.buftype == 'terminal' or vim.bo.filetype == 'terminal' then
-      return
-    end
+    if vim.bo.buftype == 'terminal' then return end
     -- get latest terminal buffer (create new if none)
     local t = term.get_recent_term()
-    -- open latest terminal buffer
-    t:open()
+    -- enter latest terminal buffer
+    t:enter()
+  end, {})
+
+  vim.api.nvim_create_user_command("BufTermNext", function ()
+    if vim.bo.buftype ~= 'terminal' then return end
+    local buf = vim.api.nvim_get_current_buf()
+    local t = term.get_next_term(buf)
+    if t then
+      vim.api.nvim_win_set_buf(0, t.bufnr)
+    end
+  end, {})
+
+  vim.api.nvim_create_user_command("BufTermPrev", function ()
+    if vim.bo.buftype ~= 'terminal' then return end
+    local buf = vim.api.nvim_get_current_buf()
+    local t = term.get_prev_term(buf)
+    if t then
+      vim.api.nvim_win_set_buf(0, t.bufnr)
+    end
   end, {})
 
   -- usercmd for toggling floating terminal window
@@ -37,7 +55,7 @@ function M.setup(conf)
             id = opts.count
           })
         end
-        t:open()
+        t:enter()
       end
       vim.cmd("BufTermEnter")
     end

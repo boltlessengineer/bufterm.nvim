@@ -1,2 +1,4 @@
 - [ ] Telescope support
-- [ ] add comment in term.cmd to show terminal id
+- [x] add comment in term.cmd to show terminal id
+- [ ] BufTermNext & BufTermPrev usercmds
+- [ ] `require('bufterm.ui').winbar(id)` function

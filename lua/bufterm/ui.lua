@@ -1,5 +1,7 @@
 local M = {}
 
+local conf = require('bufterm.config').options
+
 local function calc_len_pos(val, std)
   if val < 1 then
     return math.ceil(std * val), math.ceil(std * (1 - val) / 2)
@@ -9,22 +11,19 @@ local function calc_len_pos(val, std)
 end
 
 ---open floating window
----@param bufnr number|nil buffer id
+---@param buffer? number buffer id
 ---@return number winid
----@return number bufnr
-function M.open_float(bufnr)
-  bufnr = bufnr or vim.api.nvim_create_buf(false, false)
-  local width = 0.9
-  local height = 0.9
+function M.open_float(buffer)
+  buffer = buffer or vim.api.nvim_create_buf(false, false)
   local win_opts = {
     relative = 'editor',
     border = 'single',
   }
-  win_opts.width, win_opts.col = calc_len_pos(width, vim.o.columns)
-  win_opts.height, win_opts.row = calc_len_pos(height, vim.o.lines)
-  local winid = vim.api.nvim_open_win(bufnr, true, win_opts)
+  win_opts.width, win_opts.col = calc_len_pos(conf.ui.width, vim.o.columns)
+  win_opts.height, win_opts.row = calc_len_pos(conf.ui.height, vim.o.lines)
+  local winid = vim.api.nvim_open_win(buffer, true, win_opts)
   vim.api.nvim_win_set_option(winid, 'winhighlight', 'Normal:Normal')
-  return winid, bufnr
+  return winid
 end
 
 return M
