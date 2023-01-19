@@ -9,17 +9,14 @@ if conf.save_native_terms then
     group = augroup,
     callback = function(opts)
       -- check if current buffer is in list to prevent duplicate
-      if term.is_buf_in_list(opts.buf) then
+      if term.get_id_by_buf(opts.buf) then
         return
       end
       -- create new Terminal object with scanned informations
-      local t = Terminal:new({
+      local _ = Terminal:new({
         bufnr = opts.buf,
         jobid = vim.fn.jobpid(vim.bo[opts.buf].channel),
       })
-      -- this won't actually spawn terminal
-      -- but just adding spawned terminal to the list
-      t:spawn()
       -- set buffer options to make same with bufterm.nvim's terminals
       vim.bo[opts.buf].buflisted = conf.list_buffers
     end,
@@ -33,13 +30,52 @@ vim.api.nvim_create_autocmd("TermClose", {
     -- TODO: add config option on this behavior
     -- config.prevent_close_on_quit
     if vim.api.nvim_buf_is_loaded(opts.buf) then
-      local prev_t = term.get_prev_term(opts.buf)
-      vim.pretty_print(prev_t)
+      local prev_t = term.get_term(term.get_id_by_buf(opts.buf) - 1)
       if prev_t then
         vim.api.nvim_win_set_buf(0, prev_t.bufnr)
       end
       vim.api.nvim_buf_delete(opts.buf, { force = true })
     end
-    term.detach_buf(opts.buf)
+    -- TODO: don't detach here
+    -- just execute User->BufTermClose event
+    vim.api.nvim_exec_autocmds("User", {
+      pattern = "BufTermClose",
+      data = {
+        buf = opts.buf,
+      }
+    })
+  end
+})
+-- 33, 34(ls)
+
+function _G.print_buf(str)
+  local bufnr = 51
+  vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, {str})
+end
+-- vim.api.nvim_create_autocmd({'TermOpen', 'BufEnter', 'WinEnter'}, {
+--   pattern = 'term://*',
+--   callback = function (opts)
+--     print_buf(string.format('enter : %d', opts.buf))
+--     vim.cmd.startinsert()
+--   end
+-- })
+-- vim.api.nvim_create_autocmd({'BufLeave'}, {
+--   pattern = 'term://*',
+--   callback = function (opts)
+--     print_buf(string.format('leave : %d', opts.buf))
+--     vim.cmd.stopinsert()
+--   end
+-- })
+vim.api.nvim_create_autocmd({
+  'TermOpen',
+  'BufEnter',
+  'WinEnter',
+}, {
+  callback = function (opts)
+    if (vim.bo[opts.buf].buftype == 'terminal') then
+      vim.cmd.startinsert()
+    else
+      vim.cmd.stopinsert()
+    end
   end
 })

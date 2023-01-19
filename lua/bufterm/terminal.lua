@@ -16,17 +16,20 @@ local function get_comment_sep()
 end
 
 ---Terminal list saved by ID
----This list even includes terminals not running (YET)
+---This list only includes spawned terminals
 ---@type Terminal[]
 local terminals = {}
 
-local function get_last_id()
+---get Terminal object from list by id
+---@param buffer number
+---@return number|nil
+local function get_id_by_buf(buffer)
   for i, v in ipairs(terminals) do
-    if not v then
-      return i - 1
+    if v.bufnr == buffer then
+      return i
     end
   end
-  return #terminals
+  return nil
 end
 
 function M.__get_terms()
@@ -34,13 +37,12 @@ function M.__get_terms()
 end
 
 ---@class Terminal
----@field id number
 ---@field cmd string
----@field jobid number
----@field bufnr number
+---@field jobid number?
+---@field bufnr number? bufnr is used as ID
 ---@field on_stdout fun(job: number, data: string[]?, name:string?)
 ---@field on_stderr fun(job: number, data: string[], name:string)
----@field on_exit fun(job: number, exit_code: number?, name:string?)?
+---@field on_exit fun(job: number, exit_code: number?, name:string?)
 local Terminal = {}
 
 ---Create a new terminal object
@@ -48,14 +50,13 @@ local Terminal = {}
 ---@return Terminal
 function Terminal:new(term)
   term = term or {}
-  if terminals[term.id] then
-    return terminals[term.id]
-  end
+  -- local exist = get_by_buf(term.bufnr)
+  -- if exist then return exist end
   self.__index = self
   term.cmd = term.cmd or vim.o.shell
   local t = setmetatable(term, self)
-  -- add to list if specific id is given (see README/tips)
-  if term.id then
+  if t.bufnr and t.jobid then
+    t:__setup_autocmds()
     t:__add()
   end
   return t
@@ -63,51 +64,77 @@ end
 
 ---@private
 function Terminal:__add()
-  terminals[self.id] = self
-  return self
+  local id = get_id_by_buf(self.bufnr)
+  if id then
+    terminals[id] = self
+    return
+  end
+  table.insert(terminals, self)
+end
+
+---@private
+function Terminal:__detach()
+  local index = get_id_by_buf(self.bufnr)
+  if index then
+    table.remove(terminals, get_id_by_buf(self.bufnr))
+  end
+  self.bufnr = nil
+  self.jobid = nil
+end
+
+---@private
+function Terminal:__setup_autocmds()
+  vim.api.nvim_create_autocmd("User", {
+    group = aug,
+    pattern = "BufTermClose",
+    once = true,
+    callback = function (opts)
+      if opts.data.buf == self.bufnr then
+        self.jobid = nil
+      end
+    end
+  })
+  vim.api.nvim_create_autocmd("BufDelete", {
+    group = aug,
+    buffer = self.bufnr,
+    once = true,
+    callback = function()
+      self:__detach()
+    end,
+  })
 end
 
 ---Spawn terminal in background
 function Terminal:spawn()
-  if not (self.bufnr and vim.api.nvim_buf_is_valid(self.bufnr)) then
-    -- create new empty buffer
-    self.bufnr = vim.api.nvim_create_buf(conf.list_buffers, false)
-    vim.api.nvim_create_autocmd("BufDelete", {
-      group = aug,
-      buffer = self.bufnr,
-      callback = function()
-        self.bufnr = nil
-        self.jobid = nil
-      end,
+  -- create new empty buffer
+  self.bufnr = vim.api.nvim_create_buf(conf.list_buffers, false)
+  self:__setup_autocmds()
+  -- add to list first (to prevent duplicate from TermOpen)
+  self:__add()
+  -- start terminal in self.bufnr
+  vim.api.nvim_buf_call(self.bufnr, function()
+    -- HACK: cmd should be just pure cmd.
+    -- just provide get_term_id() functions
+    local comment_sep = get_comment_sep()
+    local command_sep = get_command_sep()
+    local cmd = table.concat({
+      self.cmd,
+      command_sep,
+      comment_sep,
+      self.bufnr
     })
-  end
-  self.id = self.id or get_last_id() + 1
-  if not self.jobid then
-    -- start terminal in self.bufnr
-    vim.api.nvim_buf_call(self.bufnr, function()
-      -- HACK: cmd should be just pure cmd.
-      -- just provide get_term_id() functions
-      local comment_sep = get_comment_sep()
-      local command_sep = get_command_sep()
-      local cmd = table.concat({
-        self.cmd,
-        command_sep,
-        comment_sep,
-        self.id
-      })
-      self.jobid = vim.fn.termopen(cmd, {
-        on_stdout = self.on_stdout,
-        on_stderr = self.on_stderr,
-        on_exit = function(...)
-          self.jobid = nil
-          if self.on_exit then
-            self.on_exit(...)
-          end
-        end,
-      }) or 0 -- HACK: fallback to ignore nil warning
-    end)
-  end
-  -- add to terminal list
+    self.jobid = vim.fn.termopen(cmd, {
+      on_stdout = self.on_stdout,
+      on_stderr = self.on_stderr,
+      on_exit = function(...)
+        self.jobid = nil
+        if self.on_exit then
+          self.on_exit(...)
+        end
+      end,
+    }) or nil -- HACK: fallback to ignore nil warning
+  end)
+  -- update the terminals list
   self:__add()
 end
 
@@ -115,7 +142,9 @@ end
 ---@param window? number winid to open the terminal buffer
 function Terminal:enter(window)
   window = window or 0
-  self:spawn()
+  if not self.bufnr then
+    self:spawn()
+  end
   vim.api.nvim_win_set_buf(window, self.bufnr)
 end
 
@@ -126,18 +155,6 @@ function Terminal:open()
   ui.open_float(self.bufnr)
 end
 
----returns terminal by buffer
----@param buffer number
----@return Terminal|nil
-function M.is_buf_in_list(buffer)
-  for _, v in ipairs(terminals) do
-    if v.bufnr == buffer then
-      return v
-    end
-  end
-  return nil
-end
-
 ---get terminal by id
 ---@param id number
 ---@return Terminal
@@ -146,54 +163,30 @@ function M.get_term(id)
 end
 
 function M.get_recent_term()
-  local term
-  local lid = get_last_id()
-  if lid > 0 then
-    term = terminals[lid]
-  else
-    -- TODO: don't return new terminal here. just return nil
-    term = Terminal:new({
-    })
-  end
-  return term
+  return terminals[#terminals]
 end
 
-function M.get_next_term(buf)
-  local cur = M.is_buf_in_list(buf)
-  if not cur then
-    return M.get_recent_term()
+function M.get_next_buf(buffer)
+  local cur = get_id_by_buf(buffer)
+  if not cur then return buffer end
+  local i = cur + 1
+  if i > #terminals then
+    i = i - #terminals
   end
-  for i, v in ipairs(terminals) do
-    if i == cur.id + 1 then
-      return v
-    end
-  end
-  return terminals[1]
+  return terminals[i].bufnr
 end
 
-function M.get_prev_term(buf)
-  -- TODO: change algorithm entirely.
-  -- cycle through with pairs() then ipairs()
-  local cur = M.is_buf_in_list(buf)
-  if not cur then
-    return M.get_recent_term()
+function M.get_prev_buf(buffer)
+  local cur = get_id_by_buf(buffer)
+  if not cur then return buffer end
+  local i = cur - 1
+  if i < 1 then
+    i = i + #terminals
   end
-  local prev_term
-  for i, v in pairs(terminals) do
-    if i == cur.id then break end
-    prev_term = v
-  end
-  return prev_term
-end
-
-function M.detach_buf(buffer)
-  for i, v in ipairs(terminals) do
-    if v.bufnr == buffer then
-      terminals[i] = nil
-    end
-  end
+  return terminals[i].bufnr
 end
 
 M.Terminal = Terminal
+M.get_id_by_buf = get_id_by_buf
 
 return M

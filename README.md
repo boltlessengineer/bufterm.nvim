@@ -13,6 +13,8 @@ This also makes managing neovim's default `:terminal` command much easy.
 
 [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) is great but it is hard to manually set terminal buffer to window layout user wants.
 
+bufterm won't save window information in Terminal object. So there is no *close* or *toggle* function. User can always manually close buffer with `:bd!` and window with `:close`
+
 ## Usage
 
 Open new terminal buffer with `:terminal` or `:BufTermEnter`
