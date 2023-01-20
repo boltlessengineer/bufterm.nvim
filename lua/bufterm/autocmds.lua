@@ -9,7 +9,7 @@ if conf.save_native_terms then
     group = augroup,
     callback = function(opts)
       -- check if current buffer is in list to prevent duplicate
-      if term.get_id_by_buf(opts.buf) then
+      if term.get_index(opts.buf) then
         return
       end
       -- create new Terminal object with scanned informations
@@ -23,59 +23,79 @@ if conf.save_native_terms then
   })
 end
 
+local function get_fallback_buffer()
+  -- create empty buffer
+  local buffer = vim.api.nvim_create_buf(true, false)
+  return buffer
+end
+
+-- TODO: what if user manually :bdelete!?
+-- -> user just should not manually :bdelete
 vim.api.nvim_create_autocmd("TermClose", {
   group = augroup,
   callback = function(opts)
-    -- detach terminal from list
-    -- TODO: add config option on this behavior
-    -- config.prevent_close_on_quit
-    if vim.api.nvim_buf_is_loaded(opts.buf) then
-      local prev_t = term.get_term(term.get_id_by_buf(opts.buf) - 1)
-      if prev_t then
-        vim.api.nvim_win_set_buf(0, prev_t.bufnr)
-      end
-      vim.api.nvim_buf_delete(opts.buf, { force = true })
+    if conf.prevent_win_close_on_exit then
+      -- if vim.api.nvim_buf_is_loaded(opts.buf) then
+      vim.schedule(function()
+        if vim.api.nvim_buf_is_loaded(opts.buf) then
+          local prev_buf = term.get_prev_buf(opts.buf)
+          if prev_buf and prev_buf ~= opts.buf then
+            vim.api.nvim_set_current_buf(prev_buf)
+            -- HACK: hack from u/pysan3
+            if vim.api.nvim_buf_get_var(prev_buf, '__terminal_mode') then
+              vim.api.nvim_feedkeys('A', 'n', false)
+            end
+          elseif conf.use_fallback_buffer then
+            vim.api.nvim_set_current_buf(get_fallback_buffer())
+          end
+          -- check one more time in schedule
+          vim.api.nvim_buf_delete(opts.buf, { force = true })
+        end
+      end)
+      -- end
     end
-    -- TODO: don't detach here
-    -- just execute User->BufTermClose event
     vim.api.nvim_exec_autocmds("User", {
-      pattern = "BufTermClose",
+      pattern = "__BufTermClose",
       data = {
         buf = opts.buf,
       }
     })
   end
 })
--- 33, 34(ls)
 
-function _G.print_buf(str)
-  local bufnr = 51
-  vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, {str})
-end
--- vim.api.nvim_create_autocmd({'TermOpen', 'BufEnter', 'WinEnter'}, {
---   pattern = 'term://*',
---   callback = function (opts)
---     print_buf(string.format('enter : %d', opts.buf))
---     vim.cmd.startinsert()
---   end
--- })
--- vim.api.nvim_create_autocmd({'BufLeave'}, {
---   pattern = 'term://*',
---   callback = function (opts)
---     print_buf(string.format('leave : %d', opts.buf))
---     vim.cmd.stopinsert()
---   end
--- })
-vim.api.nvim_create_autocmd({
-  'TermOpen',
-  'BufEnter',
-  'WinEnter',
-}, {
-  callback = function (opts)
-    if (vim.bo[opts.buf].buftype == 'terminal') then
+vim.api.nvim_create_autocmd('TermOpen', {
+  group = augroup,
+  callback = function(args)
+    if conf.start_in_insert then
       vim.cmd.startinsert()
-    else
-      vim.cmd.stopinsert()
     end
+    vim.api.nvim_buf_set_var(args.buf, '__terminal_mode', conf.start_in_insert)
+  end,
+})
+vim.api.nvim_create_autocmd('BufEnter', {
+  group = augroup,
+  pattern = 'term://*',
+  callback = vim.schedule_wrap(function(args)
+    if vim.api.nvim_buf_get_var(args.buf, '__terminal_mode') then
+      vim.cmd.startinsert()
+    end
+  end),
+})
+vim.api.nvim_create_autocmd('BufLeave', {
+  group = augroup,
+  pattern = 'term://*',
+  callback = function()
+    vim.cmd.stopinsert()
   end
 })
+if conf.remember_mode then
+  vim.api.nvim_create_autocmd('TermEnter', {
+    group = augroup,
+    callback = function(args)
+      vim.api.nvim_buf_set_var(args.buf, '__terminal_mode', true)
+    end,
+  })
+  vim.keymap.set('t', '<Plug>(term-pre-normal-mode)', function()
+    vim.api.nvim_buf_set_var(0, '__terminal_mode', false)
+  end)
+end

@@ -1,8 +1,8 @@
 - [ ] Telescope support
 - [x] add comment in term.cmd to show terminal id
 - [x] BufTermNext & BufTermPrev usercmds
-- [ ] revert to have BufTermToggle function
-- [ ] find reason why stopinsert() is executed (using scratch buffer to print log may be good idea)
-- [ ] `require('bufterm.ui').winbar(id)` function
-- [ ] add `auto_close_window=false` option
-    save normal file buffer as window-local variable on `BufWinEnter term://*`
+- [ ] revert to have BufTermFloatToggle function
+- [ ] `require('bufterm.terminal').count(buffer)` function (returns total count & current index)
+- [x] add `prevent_win_close_on_exit=true` option
+- [ ] option to open empty buffer as fallback (with `BufWinLeave` autocmd to automatically remove)
+- [ ] startinsert() when back from command output (like `:messeages`)

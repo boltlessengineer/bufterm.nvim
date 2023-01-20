@@ -4,26 +4,18 @@ local conf = require('bufterm.config').options
 local aug  = require('bufterm.config').augroup
 local ui   = require('bufterm.ui')
 
-local is_windows = vim.fn.has('win32') == 1
-local function is_cmd(shell) return shell:find("cmd") end
-
-local function get_command_sep()
-  return is_windows and is_cmd(vim.o.shell) and '&' or ';'
-end
-
-local function get_comment_sep()
-  return is_windows and is_cmd(vim.o.shell) and '::' or '#'
-end
-
 ---Terminal list saved by ID
 ---This list only includes spawned terminals
 ---@type Terminal[]
 local terminals = {}
 
----get Terminal object from list by id
+---get Terminal object's index from list by buffer
 ---@param buffer number
 ---@return number|nil
-local function get_id_by_buf(buffer)
+local function get_index(buffer)
+  if buffer == 0 then
+    buffer = vim.api.nvim_get_current_buf()
+  end
   for i, v in ipairs(terminals) do
     if v.bufnr == buffer then
       return i
@@ -36,6 +28,10 @@ function M.__get_terms()
   return terminals
 end
 
+function M.count_terms()
+  return #terminals, get_index(0)
+end
+
 ---@class Terminal
 ---@field cmd string
 ---@field jobid number?
@@ -46,7 +42,7 @@ end
 local Terminal = {}
 
 ---Create a new terminal object
----@param term Terminal
+---@param term? Terminal
 ---@return Terminal
 function Terminal:new(term)
   term = term or {}
@@ -64,7 +60,7 @@ end
 
 ---@private
 function Terminal:__add()
-  local id = get_id_by_buf(self.bufnr)
+  local id = get_index(self.bufnr)
   if id then
     terminals[id] = self
     return
@@ -74,9 +70,9 @@ end
 
 ---@private
 function Terminal:__detach()
-  local index = get_id_by_buf(self.bufnr)
+  local index = get_index(self.bufnr)
   if index then
-    table.remove(terminals, get_id_by_buf(self.bufnr))
+    table.remove(terminals, get_index(self.bufnr))
   end
   self.bufnr = nil
   self.jobid = nil
@@ -84,9 +80,10 @@ end
 
 ---@private
 function Terminal:__setup_autocmds()
+  -- This is executed after TermClose event
   vim.api.nvim_create_autocmd("User", {
     group = aug,
-    pattern = "BufTermClose",
+    pattern = "__BufTermClose",
     once = true,
     callback = function (opts)
       if opts.data.buf == self.bufnr then
@@ -106,6 +103,9 @@ end
 
 ---Spawn terminal in background
 function Terminal:spawn()
+  if self.bufnr and self.jobid then
+    return
+  end
   -- create new empty buffer
   self.bufnr = vim.api.nvim_create_buf(conf.list_buffers, false)
   self:__setup_autocmds()
@@ -113,17 +113,7 @@ function Terminal:spawn()
   self:__add()
   -- start terminal in self.bufnr
   vim.api.nvim_buf_call(self.bufnr, function()
-    -- HACK: cmd should be just pure cmd.
-    -- just provide get_term_id() functions
-    local comment_sep = get_comment_sep()
-    local command_sep = get_command_sep()
-    local cmd = table.concat({
-      self.cmd,
-      command_sep,
-      comment_sep,
-      self.bufnr
-    })
-    self.jobid = vim.fn.termopen(cmd, {
+    self.jobid = vim.fn.termopen(self.cmd, {
       on_stdout = self.on_stdout,
       on_stderr = self.on_stderr,
       on_exit = function(...)
@@ -150,7 +140,6 @@ end
 
 ---Open terminal buffer in floating window
 function Terminal:open()
-  -- TODO: close all opened floating window with terminal buffer
   self:spawn()
   ui.open_float(self.bufnr)
 end
@@ -167,26 +156,28 @@ function M.get_recent_term()
 end
 
 function M.get_next_buf(buffer)
-  local cur = get_id_by_buf(buffer)
-  if not cur then return buffer end
+  local cur = get_index(buffer)
+  if not cur then return nil end
   local i = cur + 1
   if i > #terminals then
     i = i - #terminals
   end
+  if not terminals[i] then return nil end
   return terminals[i].bufnr
 end
 
 function M.get_prev_buf(buffer)
-  local cur = get_id_by_buf(buffer)
-  if not cur then return buffer end
+  local cur = get_index(buffer)
+  if not cur then return nil end
   local i = cur - 1
   if i < 1 then
     i = i + #terminals
   end
+  if not terminals[i] then return nil end
   return terminals[i].bufnr
 end
 
 M.Terminal = Terminal
-M.get_id_by_buf = get_id_by_buf
+M.get_index = get_index
 
 return M
