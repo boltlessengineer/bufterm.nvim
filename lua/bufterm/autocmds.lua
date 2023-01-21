@@ -31,6 +31,7 @@ end
 
 -- TODO: what if user manually :bdelete!?
 -- -> user just should not manually :bdelete
+-- -> actually that's :bdelete's default behavior (same with normal files)
 vim.api.nvim_create_autocmd("TermClose", {
   group = augroup,
   callback = function(opts)
@@ -65,37 +66,49 @@ vim.api.nvim_create_autocmd("TermClose", {
 
 vim.api.nvim_create_autocmd('TermOpen', {
   group = augroup,
-  callback = function(args)
+  callback = function()
     if conf.start_in_insert then
       vim.cmd.startinsert()
     end
-    vim.api.nvim_buf_set_var(args.buf, '__terminal_mode', conf.start_in_insert)
   end,
 })
-vim.api.nvim_create_autocmd('BufEnter', {
-  group = augroup,
-  pattern = 'term://*',
-  callback = vim.schedule_wrap(function(args)
-    if vim.api.nvim_buf_get_var(args.buf, '__terminal_mode') then
-      vim.cmd.startinsert()
-    end
-  end),
-})
-vim.api.nvim_create_autocmd('BufLeave', {
-  group = augroup,
-  pattern = 'term://*',
-  callback = function()
-    vim.cmd.stopinsert()
-  end
-})
 if conf.remember_mode then
+  local term_mode_var = '__terminal_mode'
+  -- Save mode once when user leaves terminal buffer first time
+  vim.api.nvim_create_autocmd('TermOpen', {
+    group = augroup,
+    callback = function(args)
+      vim.api.nvim_create_autocmd({ 'BufEnter', 'BufLeave' }, {
+        group = augroup,
+        buffer = args.buf,
+        once = true,
+        callback = function()
+          local mode = vim.fn.mode()
+          vim.api.nvim_buf_set_var(args.buf, term_mode_var, mode)
+        end
+      })
+    end,
+  })
   vim.api.nvim_create_autocmd('TermEnter', {
     group = augroup,
     callback = function(args)
-      vim.api.nvim_buf_set_var(args.buf, '__terminal_mode', true)
-    end,
+      vim.api.nvim_buf_set_var(args.buf, term_mode_var, 't')
+    end
   })
-  vim.keymap.set('t', '<Plug>(term-pre-normal-mode)', function()
-    vim.api.nvim_buf_set_var(0, '__terminal_mode', false)
-  end)
+  vim.api.nvim_create_autocmd('TermLeave', {
+    group = augroup,
+    callback = function(args)
+      vim.api.nvim_buf_set_var(args.buf, term_mode_var, 'n')
+    end
+  })
+  vim.api.nvim_create_autocmd('BufEnter', {
+    group = augroup,
+    pattern = 'term://*',
+    callback = vim.schedule_wrap(function(args)
+      local mode = vim.api.nvim_buf_get_var(args.buf, term_mode_var)
+      if mode == 't' then
+        vim.cmd.startinsert()
+      end
+    end),
+  })
 end

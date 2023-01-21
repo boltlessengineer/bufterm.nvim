@@ -15,9 +15,6 @@ This also makes managing neovim's default `:terminal` command much easy.
 
 bufterm won't save window information in Terminal object. So there is no *close* or *toggle* function. User can always manually close buffer with `:bdelete!` and window with `:close`
 
-## Notices
-
-
 ## Installation
 
 Using packer.nvim
@@ -49,9 +46,7 @@ require('bufterm').setup({
   },
 })
 ```
-> **Note**: `prevent_close_on_exit=true` option won't work with `:bdelete!` command
-
-> **Note**: `remember_mode=true` option only works when user exits terminal-mode with configured keymaps
+> **Note**: `prevent_close_on_exit` option won't work with `:bdelete!` command
 
 ## Usage
 
