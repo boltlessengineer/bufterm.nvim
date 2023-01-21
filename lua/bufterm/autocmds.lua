@@ -74,7 +74,7 @@ vim.api.nvim_create_autocmd('TermOpen', {
 })
 if conf.remember_mode then
   local term_mode_var = '__terminal_mode'
-  -- Save mode once when user leaves terminal buffer first time
+  -- Save mode once when user enters/leaves terminal buffer first time
   vim.api.nvim_create_autocmd('TermOpen', {
     group = augroup,
     callback = function(args)
@@ -110,5 +110,18 @@ if conf.remember_mode then
         vim.cmd.startinsert()
       end
     end),
+  })
+  vim.api.nvim_create_autocmd('ModeChanged', {
+    group = augroup,
+    pattern = 'c:ntT',
+    callback = vim.schedule_wrap(function (args)
+      local new_buf = vim.api.nvim_get_current_buf()
+      if args.buf ~= new_buf then
+        vim.cmd.stopinsert()
+        vim.api.nvim_exec_autocmds('TermEnter', {
+          buffer = args.buf,
+        })
+      end
+    end)
   })
 end
