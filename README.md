@@ -1,19 +1,45 @@
 # bufterm.nvim
 
-> This readme is work in progress
+> Treat terminals as buffers, not windows.
 
-A neovim plugin to manage *only* terminal-buffers
+A neovim plugin to manage terminal buffers
 
 ## Thoughts
 
-Terminal object should NEVER contain specific window information.
-Managing windows is completely another job.
-User should able to *enter* terminal buffers in any window.
-This also makes managing neovim's default `:terminal` command much easy.
+- No need to open terminal buffer in new specific window every time.
+- User should able to *enter* terminal buffers in *any window*.
 
-[toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) is great but it is hard to manually set terminal buffer to window layout user wants.
+Other terminal plugins are great but it is hard to manually set terminal buffer to window layout user wants.
 
-bufterm won't save window information in Terminal object. So there is no *close* or *toggle* function. User can always manually close buffer with `:bdelete!` and window with `:close`
+BufTerm NEVER create terminal window on it's own. It only gives you `enter()` function to enter terminal buffer. User can always manually close buffer with `:bdelete!` and window with `:close`
+
+## Features
+
+### Enter & Switch Terminal buffers
+
+Using `:BufTermEnter`, you can enter spawned terminal buffer in *any* windows. Just enter the window you want, and run `:BufTermEnter`
+
+You can also cycle through terminal buffers with `:BufTermNext` and `:BufTermPrev` commads.
+
+### Vim8-like Window navigation
+
+Automatically restore the last mode when leaving the terminal buffer.
+
+> **Warning**
+> Don't use keymap `<C-\><C-n><C-w>...` or `<C-\><C-o><C-w>...` for window navigation. This will break `remember_mode` feature.
+> Use `:wincmd` instead.
+>
+> Example config:
+> ```lua
+> vim.keymap.set('t', '<C-w>h', '<cmd>wincmd h<CR>')
+> vim.keymap.set('t', '<C-w>j', '<cmd>wincmd j<CR>')
+> vim.keymap.set('t', '<C-w>k', '<cmd>wincmd k<CR>')
+> vim.keymap.set('t', '<C-w>l', '<cmd>wincmd l<CR>')
+> ```
+
+### Compatible with native commands
+
+Although BufTerm provides various useful commands, you can still use Neovim's native commands like `:terminal`, `:buffer`, `:bprev`, `:wincmd`
 
 ## Installation
 
@@ -34,15 +60,16 @@ Below is default configuration
 
 ```lua
 require('bufterm').setup({
-  normal_mode_keymap = [[<C-[>]],   -- keymap to enter normal-mode in terminal buffers
   save_native_terms = true,         -- integrate native terminals from `:terminal` command
   prevent_win_close_on_exit = true, -- prevent auto-closing window on terminal exit
   use_fallback_buffer = true,       -- open empty buffer when no terminal window left
   start_in_insert = true,           -- start terminal in insert mode
   remember_mode = true,             -- remember vi_mode of terminal buffer
+  enable_ctrl_w = true,             -- use <C-w> for window navigating in terminal mode (like vim8)
   ui = {
-    width = 0.9,                    -- UI options for default floating window
-    height = 0.9,
+    open_win = function(bufnr)      -- function called in `:BufTermOpen` returns window-id (used for closing)
+      return winid
+    end,
   },
 })
 ```
@@ -50,6 +77,7 @@ require('bufterm').setup({
 
 ## Usage
 
+- Enter terminal buffers in current window with `:BufTermEnter`
 - Open new terminal buffer with `:terminal` or `:BufTermEnter`
 - Switch between terminal buffers with `:BufTermNext` and `:BufTermPrev`
 
@@ -58,27 +86,41 @@ require('bufterm').setup({
 Enter terminal buffer in current window.
 Create new terminal buffer if there is no terminal buffer running
 
-### `:BufTermFloat`
-
-Toggle Terminal buffer in way user wants (default is floating window)
-
 ### `:BufTermPrev`, `:BufTermNext`
 
 Cycle through list of terminal buffers
 
 ## Tips
 
-### Open Lazygit with bufterm.nvim
+### Open Lazygit in floating window
 
 ```lua
 -- this will add Terminal to the list (not starting job yet)
 local Terminal = require('bufterm.terminal').Terminal
+local ui       = require('bufterm.ui')
+
 local lazygit = Terminal:new({
   cmd = 'lazygit',
 })
 vim.keymap.set('n', '<leader>g', function()
-  lazygit:open()
+  -- spawn terminal (terminal won't be spawned if self.jobid is valid)
+  lazygit:spawn()
+  -- open floating window
+  ui.toggle_float(lazygit.bufnr)
 end, {
-  desc = 'Toggle lazygit floating window',
+  desc = 'Open lazygit in floating window',
+})
+```
+
+### Toggle Floating terminal
+```lua
+local term = require('bufterm.terminal')
+local ui   = require('bufterm.ui')
+
+vim.keymap.set({ 'n', 't' }, '<C-t>', function()
+  local recent_term = term.get_recent_term()
+  ui.toggle_float(recent_term.bufnr)
+end, {
+  desc = 'Toggle floating window with terminal buffers',
 })
 ```
