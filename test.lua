@@ -1,6 +1,7 @@
 local bufterm = require('bufterm')
 
 bufterm.setup({
+  debug = true,
   use_fallback_buffer = false,
 })
 

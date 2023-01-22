@@ -29,6 +29,14 @@ local function get_fallback_buffer()
   return buffer
 end
 
+local term_mode_var = '__terminal_mode'
+local function set_mode(buf, mode)
+  vim.b[buf][term_mode_var] = mode
+end
+local function get_mode(buf)
+  return vim.b[buf][term_mode_var]
+end
+
 -- TODO: what if user manually :bdelete!?
 -- -> user just should not manually :bdelete
 -- -> actually that's :bdelete's default behavior (same with normal files)
@@ -43,7 +51,7 @@ vim.api.nvim_create_autocmd("TermClose", {
           if prev_buf and prev_buf ~= opts.buf then
             vim.api.nvim_set_current_buf(prev_buf)
             -- HACK: hack from u/pysan3
-            if vim.api.nvim_buf_get_var(prev_buf, '__terminal_mode') == 't' then
+            if get_mode(prev_buf) == 't' then
               utils.log('feedkeys    after TermClose')
               vim.api.nvim_feedkeys('A', 'n', false)
             end
@@ -67,59 +75,40 @@ vim.api.nvim_create_autocmd("TermClose", {
 
 vim.api.nvim_create_autocmd('TermOpen', {
   group = augroup,
-  callback = function()
+  callback = vim.schedule_wrap(function(args)
     if conf.start_in_insert then
       utils.log('startinsert in TermOpen')
-      vim.cmd.startinsert()
+      if conf.remember_mode then
+        set_mode(args.buf, 't')
+      else
+        set_mode(args.buf, 'n')
+      end
     end
-  end,
+  end),
 })
 if conf.remember_mode then
-  local term_mode_var = '__terminal_mode'
-  -- Save mode once when user enters/leaves terminal buffer first time
-  vim.api.nvim_create_autocmd('TermOpen', {
-    group = augroup,
-    callback = function(args)
-      -- local mode = vim.fn.mode()
-      -- vim.api.nvim_buf_set_var(args.buf, term_mode_var, mode)
-      vim.api.nvim_create_autocmd({
-        'BufEnter',
-        -- 'BufLeave',
-      }, {
-        group = augroup,
-        buffer = args.buf,
-        once = true,
-        callback = vim.schedule_wrap(function(a)
-          local mode = vim.fn.mode()
-          utils.log(string.format('set mode %-3s in %s', a.event, mode))
-          vim.api.nvim_buf_set_var(args.buf, term_mode_var, mode)
-        end)
-      })
-    end,
-  })
   vim.api.nvim_create_autocmd('TermEnter', {
     group = augroup,
     callback = function(args)
-      vim.api.nvim_buf_set_var(args.buf, term_mode_var, 't')
+      set_mode(args.buf, 't')
     end
   })
   vim.api.nvim_create_autocmd('TermLeave', {
     group = augroup,
     callback = function(args)
-      vim.api.nvim_buf_set_var(args.buf, term_mode_var, 'n')
+      set_mode(args.buf, 'n')
     end
   })
   vim.api.nvim_create_autocmd('BufEnter', {
     group = augroup,
     pattern = 'term://*',
     callback = vim.schedule_wrap(function(args)
-      local mode = vim.api.nvim_buf_get_var(args.buf, term_mode_var)
-      if mode == 't' then
-        utils.log('startinsert in BufEnter')
-        vim.cmd.startinsert()
-      else
+      if get_mode(args.buf) == 'n' then
         utils.log('stopinsert  in BufEnter')
         vim.cmd.stopinsert()
+      else
+        utils.log('startinsert in BufEnter')
+        vim.cmd.startinsert()
       end
     end),
   })
