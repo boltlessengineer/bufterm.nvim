@@ -27,15 +27,7 @@ Automatically restore the last mode when leaving the terminal buffer.
 
 > **Warning**
 > Don't use keymap `<C-\><C-n><C-w>...` or `<C-\><C-o><C-w>...` for window navigation. This will break `remember_mode` feature.
-> Use `:wincmd` instead.
->
-> Example config:
-> ```lua
-> vim.keymap.set('t', '<C-w>h', '<cmd>wincmd h<CR>')
-> vim.keymap.set('t', '<C-w>j', '<cmd>wincmd j<CR>')
-> vim.keymap.set('t', '<C-w>k', '<cmd>wincmd k<CR>')
-> vim.keymap.set('t', '<C-w>l', '<cmd>wincmd l<CR>')
-> ```
+> Instead, use `:wincmd` or `enable_ctrl_w` option below.
 
 ### Compatible with native commands
 
@@ -60,12 +52,12 @@ Below is default configuration
 
 ```lua
 require('bufterm').setup({
-  save_native_terms = true,         -- integrate native terminals from `:terminal` command
+  save_native_terms         = true, -- integrate native terminals from `:terminal` command
   prevent_win_close_on_exit = true, -- prevent auto-closing window on terminal exit
-  use_fallback_buffer = true,       -- open empty buffer when no terminal window left
-  start_in_insert = true,           -- start terminal in insert mode
-  remember_mode = true,             -- remember vi_mode of terminal buffer
-  enable_ctrl_w = true,             -- use <C-w> for window navigating in terminal mode (like vim8)
+  use_fallback_buffer       = true, -- open empty buffer when no terminal window left
+  start_in_insert           = true, -- start terminal in insert mode
+  remember_mode             = true, -- remember vi_mode of terminal buffer
+  enable_ctrl_w             = true, -- use <C-w> for window navigating in terminal mode (like vim8)
 })
 ```
 > **Note**: `prevent_close_on_exit` option won't work with `:bdelete!` command
