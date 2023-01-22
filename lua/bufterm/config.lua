@@ -5,23 +5,27 @@ local M = {}
 ---@field height number
 
 ---@class BufTermConfig
+---@field debug boolean
 ---@field list_buffers boolean
 ---@field save_native_terms boolean
 ---@field prevent_win_close_on_exit boolean
 ---@field use_fallback_buffer boolean
 ---@field start_in_insert boolean
 ---@field remember_mode boolean
+---@field enable_ctrl_w boolean
 ---@field ui BufTermUIConfig
 M.options = {
+  debug = false,
   list_buffers = true,
   save_native_terms = true,
   prevent_win_close_on_exit = true,
-  use_fallback_buffer = true, -- only used when `prevent_win_close_on_exit` is true
+  use_fallback_buffer = true, -- ignored when `prevent_win_close_on_exit` is false
   start_in_insert = true,
   remember_mode = true,
+  enable_ctrl_w = true,
   ui = {
-    width = 0.9,
-    height = 0.9,
+    open_win = function ()
+    end,
   }
 }
 

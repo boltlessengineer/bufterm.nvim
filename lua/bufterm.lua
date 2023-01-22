@@ -11,6 +11,7 @@ function M.setup(conf)
   config.set(conf)
 
   require('bufterm.autocmds')
+  require('bufterm.keymaps')
 
   vim.api.nvim_create_user_command("BufTermEnter", function()
     -- check if current buftype is *NOT* 'terminal'

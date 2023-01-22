@@ -50,16 +50,16 @@ function Terminal:new(term)
   -- if exist then return exist end
   self.__index = self
   term.cmd = term.cmd or vim.o.shell
-  local t = setmetatable(term, self)
-  if t.bufnr and t.jobid then
-    t:__setup_autocmds()
-    t:__add()
+  setmetatable(term, self)
+  if term.bufnr and term.jobid then
+    term:__setup_autocmds()
+    term:__add_to_list()
   end
-  return t
+  return term
 end
 
 ---@private
-function Terminal:__add()
+function Terminal:__add_to_list()
   local id = get_index(self.bufnr)
   if id then
     terminals[id] = self
@@ -72,7 +72,7 @@ end
 function Terminal:__detach()
   local index = get_index(self.bufnr)
   if index then
-    table.remove(terminals, get_index(self.bufnr))
+    table.remove(terminals, index)
   end
   self.bufnr = nil
   self.jobid = nil
@@ -110,7 +110,7 @@ function Terminal:spawn()
   self.bufnr = vim.api.nvim_create_buf(conf.list_buffers, false)
   self:__setup_autocmds()
   -- add to list first (to prevent duplicate from TermOpen)
-  self:__add()
+  self:__add_to_list()
   -- start terminal in self.bufnr
   vim.api.nvim_buf_call(self.bufnr, function()
     self.jobid = vim.fn.termopen(self.cmd, {
@@ -125,7 +125,7 @@ function Terminal:spawn()
     }) or nil -- HACK: fallback to ignore nil warning
   end)
   -- update the terminals list
-  self:__add()
+  -- self:__add()
 end
 
 ---Open terminal buffer
