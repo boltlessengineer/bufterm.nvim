@@ -43,15 +43,12 @@ function M.setup(conf)
   end, {})
 
   vim.api.nvim_create_user_command('BufTermFloat', function()
-    local winid = ui.toggle_float()
-    if winid then
-      local t = term.get_recent_term()
-      if not t then
-        t = Terminal:new()
-      end
+    local t = term.get_recent_term()
+    if not t then
+      t = Terminal:new()
       t:spawn()
-      vim.api.nvim_win_set_buf(winid, t.bufnr)
     end
+    ui.toggle_float(t.bufnr)
   end, {})
 end
 

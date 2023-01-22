@@ -2,7 +2,6 @@ local M = {}
 
 local conf = require('bufterm.config').options
 local aug  = require('bufterm.config').augroup
-local ui   = require('bufterm.ui')
 
 ---Terminal list saved by ID
 ---This list only includes spawned terminals
@@ -136,12 +135,6 @@ function Terminal:enter(window)
     self:spawn()
   end
   vim.api.nvim_win_set_buf(window, self.bufnr)
-end
-
----Open terminal buffer in floating window
-function Terminal:open()
-  self:spawn()
-  ui.open_float(self.bufnr)
 end
 
 ---get terminal by id

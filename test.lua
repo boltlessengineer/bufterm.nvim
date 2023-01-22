@@ -6,6 +6,7 @@ bufterm.setup({
 })
 
 local Terminal = require('bufterm.terminal').Terminal
+local ui       = require('bufterm.ui')
 
 local lazygit = Terminal:new({
   cmd = 'lazygit',
@@ -14,7 +15,8 @@ local lazygit = Terminal:new({
 vim.keymap.set('n', [[\\]], '<cmd>BufTermEnter<CR>')
 vim.keymap.set({ 'n', 't' }, [[<C-f>]], '<cmd>BufTermFloat<CR>')
 vim.keymap.set('n', '<space>g', function()
-  lazygit:open()
+  lazygit:spawn()
+  ui.toggle_float(lazygit.bufnr)
 end)
 vim.keymap.set('t', '<C-o>', '<cmd>BufTermPrev<CR>')
 vim.keymap.set('t', '<C-i>', '<cmd>BufTermNext<CR>')

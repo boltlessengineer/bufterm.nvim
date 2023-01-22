@@ -1,12 +1,19 @@
+- [ ] Better name
+
 - [ ] Telescope support
 - [x] add comment in term.cmd to show terminal id
 - [x] BufTermNext & BufTermPrev usercmds
 - [x] revert to have BufTermFloatToggle function
 - [x] add `prevent_win_close_on_exit=true` option
+- [ ] combine `prevent_win_close_on_exit` and `use_fallback_buffer` to one `fallback_on_exit` option
 
 # UI
+- [ ] handle situation when cycle through terminal buffers in floating-window while they are also opened in normal split windows
+    - [ ] just don't allow to open in floating window while it is in split window
+    - [ ] detect split & enter new terminal buffer
 - [ ] b:bufterm_index & g:bufterm_count variables for winbar
-- [ ] `ui.toggle_win()` option (used by `:BufTermToggle`)
+- [-] `ui.open_win()` option (used by `:BufTermToggle`)
+- [x] `utils.toggle_float(buf)` default helper function
 - [ ] option to open empty buffer as fallback (with `BufWinLeave` autocmd to automatically remove)
 
 # Terminal
@@ -16,7 +23,8 @@
 # Keymap/Vi-mode
 - [x] run stopinsert() on `terminal-mode` -> `command-mode` -> `:wincmd k`
 - [ ] startinsert() inside `TermClose` autocmd (current way is HACK)
-- [ ] keymaps
-    - [x] `<C-w>` feature
-    - [ ] Add note about Hydra.nvim in README
-        (Similar algorithm, but created my own to reduce dependency and Hydra.nvim's feature is too masive then this plugin's need)
+- [x] `<C-w>` feature
+- [ ] Add note about Hydra.nvim in README
+    (Similar algorithm, but created my own to reduce dependency and Hydra.nvim's feature is too masive then this plugin's need)
+- [ ] Option to set more wincmds
+- [ ] Seperate Keymap feature as other plugin. Leave only Vi-mode feature
