@@ -13,9 +13,11 @@ if conf.save_native_terms then
         return
       end
       -- create new Terminal object with scanned informations
+      local ok, jobid = pcall(vim.fn.jobpid, vim.bo[opts.buf].channel)
+      if not ok then return end
       local _ = Terminal:new({
         bufnr = opts.buf,
-        jobid = vim.fn.jobpid(vim.bo[opts.buf].channel),
+        jobid = jobid,
       })
       -- set buffer options to make same with bufterm.nvim's terminals
       vim.bo[opts.buf].buflisted = conf.list_buffers
