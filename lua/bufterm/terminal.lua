@@ -38,6 +38,7 @@ end
 ---@field on_stdout fun(job: number, data: string[]?, name:string?)
 ---@field on_stderr fun(job: number, data: string[], name:string)
 ---@field on_exit fun(job: number, exit_code: number?, name:string?)
+---@field fallback_on_exit boolean
 local Terminal = {}
 
 ---Create a new terminal object
@@ -49,6 +50,7 @@ function Terminal:new(term)
   -- if exist then return exist end
   self.__index = self
   term.cmd = term.cmd or vim.o.shell
+  term.fallback_on_exit = vim.F.if_nil(term.fallback_on_exit, conf.fallback_on_exit)
   setmetatable(term, self)
   if term.bufnr and term.jobid then
     term:__setup_autocmds()
@@ -107,6 +109,7 @@ function Terminal:spawn()
   end
   -- create new empty buffer
   self.bufnr = vim.api.nvim_create_buf(conf.list_buffers, false)
+  vim.b[self.bufnr].fallback_on_exit = self.fallback_on_exit
   self:__setup_autocmds()
   -- add to list first (to prevent duplicate from TermOpen)
   self:__add_to_list()

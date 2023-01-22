@@ -21,14 +21,9 @@ if conf.save_native_terms then
       })
       -- set buffer options to make same with bufterm.nvim's terminals
       vim.bo[opts.buf].buflisted = conf.list_buffers
+      vim.b[opts.buf].fallback_on_exit = conf.fallback_on_exit
     end,
   })
-end
-
-local function get_fallback_buffer()
-  -- create empty buffer
-  local buffer = vim.api.nvim_create_buf(true, false)
-  return buffer
 end
 
 local term_mode_var = '__terminal_mode'
@@ -45,8 +40,7 @@ end
 vim.api.nvim_create_autocmd("TermClose", {
   group = augroup,
   callback = function(opts)
-    if conf.prevent_win_close_on_exit then
-      -- if vim.api.nvim_buf_is_loaded(opts.buf) then
+    if vim.b[opts.buf].fallback_on_exit then
       vim.schedule(function()
         if vim.api.nvim_buf_is_loaded(opts.buf) then
           local prev_buf = term.get_prev_buf(opts.buf)
@@ -57,14 +51,16 @@ vim.api.nvim_create_autocmd("TermClose", {
               utils.log('feedkeys    after TermClose')
               vim.api.nvim_feedkeys('A', 'n', false)
             end
-          elseif conf.use_fallback_buffer then
-            vim.api.nvim_set_current_buf(get_fallback_buffer())
           end
-          -- check one more time in schedule
           vim.api.nvim_buf_delete(opts.buf, { force = true })
         end
       end)
-      -- end
+    else
+      vim.schedule(function()
+        if vim.api.nvim_buf_is_loaded(opts.buf) then
+          vim.api.nvim_buf_delete(opts.buf, { force = true })
+        end
+      end)
     end
     vim.api.nvim_exec_autocmds("User", {
       pattern = "__BufTermClose",

@@ -10,6 +10,7 @@ local ui       = require('bufterm.ui')
 
 local lazygit = Terminal:new({
   cmd = 'lazygit',
+  fallback_on_exit = false,
 })
 
 vim.keymap.set('n', [[\\]], '<cmd>BufTermEnter<CR>')

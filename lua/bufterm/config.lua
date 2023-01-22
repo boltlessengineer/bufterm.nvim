@@ -4,8 +4,7 @@ local M = {}
 ---@field debug boolean
 ---@field list_buffers boolean
 ---@field save_native_terms boolean
----@field prevent_win_close_on_exit boolean
----@field use_fallback_buffer boolean
+---@field fallback_on_exit boolean
 ---@field start_in_insert boolean
 ---@field remember_mode boolean
 ---@field enable_ctrl_w boolean
@@ -13,8 +12,7 @@ M.options = {
   debug = false,
   list_buffers = true,
   save_native_terms = true,
-  prevent_win_close_on_exit = true,
-  use_fallback_buffer = true, -- ignored when `prevent_win_close_on_exit` is false
+  fallback_on_exit = true,
   start_in_insert = true,
   remember_mode = true,
   enable_ctrl_w = true,
