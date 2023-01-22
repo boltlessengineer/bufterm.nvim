@@ -66,11 +66,6 @@ require('bufterm').setup({
   start_in_insert = true,           -- start terminal in insert mode
   remember_mode = true,             -- remember vi_mode of terminal buffer
   enable_ctrl_w = true,             -- use <C-w> for window navigating in terminal mode (like vim8)
-  ui = {
-    open_win = function(bufnr)      -- function called in `:BufTermOpen` returns window-id (used for closing)
-      return winid
-    end,
-  },
 })
 ```
 > **Note**: `prevent_close_on_exit` option won't work with `:bdelete!` command

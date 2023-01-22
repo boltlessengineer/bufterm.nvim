@@ -1,9 +1,5 @@
 local M = {}
 
----@class BufTermUIConfig
----@field width number
----@field height number
-
 ---@class BufTermConfig
 ---@field debug boolean
 ---@field list_buffers boolean
@@ -13,7 +9,6 @@ local M = {}
 ---@field start_in_insert boolean
 ---@field remember_mode boolean
 ---@field enable_ctrl_w boolean
----@field ui BufTermUIConfig
 M.options = {
   debug = false,
   list_buffers = true,
@@ -23,10 +18,6 @@ M.options = {
   start_in_insert = true,
   remember_mode = true,
   enable_ctrl_w = true,
-  ui = {
-    open_win = function ()
-    end,
-  }
 }
 
 M.augroup = vim.api.nvim_create_augroup('BufTerm', {})

@@ -22,9 +22,10 @@
 
 # Keymap/Vi-mode
 - [x] run stopinsert() on `terminal-mode` -> `command-mode` -> `:wincmd k`
-- [ ] startinsert() inside `TermClose` autocmd (current way is HACK)
 - [x] `<C-w>` feature
-- [ ] Add note about Hydra.nvim in README
-    (Similar algorithm, but created my own to reduce dependency and Hydra.nvim's feature is too masive then this plugin's need)
-- [ ] Option to set more wincmds
 - [ ] Seperate Keymap feature as other plugin. Leave only Vi-mode feature
+- [ ] startinsert() inside `TermClose` autocmd (current way is HACK)
+- [ ] Option to set more wincmds
+
+# Bug?
+- [ ] lazygit (floating) -> `C` (nvim-unception) -> `:wq` -> lazygit goes to background window..???
