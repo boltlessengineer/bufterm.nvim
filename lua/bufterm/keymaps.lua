@@ -33,7 +33,7 @@ end)
 
 for _, lhs in ipairs({
   'h', 'j', 'k', 'l', 'H', 'J', 'K', 'L', 'w',
-  'v', 's', 'q',
+  'v', 's', 'o', 'q',
   '+', '-', '<', '>', '=',
 }) do
   local cmd = lhs
