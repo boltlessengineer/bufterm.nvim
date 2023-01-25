@@ -50,6 +50,4 @@ for _, lhs in ipairs({
     _tmap_wincmd(lhs, rhs)
   end
 end
--- TODO: check if this runs `TermLeave`
--- TODO: setup autocmd to run `stopinsert()` on `:wincmd` here
 _tmap_wincmd(':', [[<C-\><C-o>:]])

@@ -22,9 +22,9 @@ if opts.save_native_terms then
       })
       -- set buffer options to make same with bufterm.nvim's terminals
       vim.bo[args.buf].filetype = conf.filetype
-      vim.bo[args.buf].buflisted = opts.list_buffers
-      vim.b[args.buf].__terminal_listed = true
-      vim.b[args.buf].fallback_on_exit = opts.fallback_on_exit
+      vim.bo[args.buf].buflisted = opts.terminal.buflisted
+      vim.b[args.buf].termlisted = true
+      vim.b[args.buf].fallback_on_exit = opts.terminal.fallback_on_exit
     end,
   })
 end

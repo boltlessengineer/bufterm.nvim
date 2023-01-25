@@ -11,7 +11,7 @@ local ui       = require('bufterm.ui')
 local lazygit = Terminal:new({
   cmd = 'lazygit',
   fallback_on_exit = false,
-  list = false,
+  termlisted = false,
 })
 
 vim.keymap.set('t', '<C-o>', '<cmd>BufTermPrev<CR>')

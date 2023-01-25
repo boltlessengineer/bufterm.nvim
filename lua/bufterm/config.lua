@@ -1,21 +1,26 @@
 local M = {}
 
+---@class BufTermTerminalConfig
+---@field buflisted boolean
+---@field fallback_on_exit boolean
+
 ---@class BufTermConfig
 ---@field debug boolean
----@field list_buffers boolean
 ---@field save_native_terms boolean
----@field fallback_on_exit boolean
 ---@field start_in_insert boolean
 ---@field remember_mode boolean
 ---@field enable_ctrl_w boolean
+---@field terminal BufTermTerminalConfig
 M.options = {
   debug = false,
-  list_buffers = true,
   save_native_terms = true,
-  fallback_on_exit = true,
   start_in_insert = true,
   remember_mode = true,
   enable_ctrl_w = true,
+  terminal = {
+    buflisted = true,
+    fallback_on_exit = true,
+  }
 }
 
 M.augroup = vim.api.nvim_create_augroup('BufTerm', {})

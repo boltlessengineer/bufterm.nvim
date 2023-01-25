@@ -55,13 +55,16 @@ Below is default configuration
 ```lua
 require('bufterm').setup({
   save_native_terms = true, -- integrate native terminals from `:terminal` command
-  fallback_on_exit  = true, -- prevent auto-closing window on terminal exit
   start_in_insert   = true, -- start terminal in insert mode
   remember_mode     = true, -- remember vi_mode of terminal buffer
   enable_ctrl_w     = true, -- use <C-w> for window navigating in terminal mode (like vim8)
+  terminal = {              -- default terminal settings
+    buflisted         = true, -- whether to set 'buflisted' option
+    fallback_on_exit  = true, -- prevent auto-closing window on terminal exit
+  }
 })
 ```
-> **Note**: `prevent_close_on_exit` option won't work with `:bdelete!` command
+> **Note**: `fallback_on_exit` option won't work with `:bdelete!` command
 
 ## Usage
 

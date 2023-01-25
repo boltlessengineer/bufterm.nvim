@@ -31,7 +31,7 @@ end
 local function remove(buffer)
   local i = get_index(buffer)
   local n = #terminals
-  if i and (i < 0 or i > n) then
+  if (not i) or (i < 0 or i > n) then
     return nil
   end
   local removed = terminals[i]
@@ -53,11 +53,12 @@ end
 ---@field cmd string
 ---@field jobid number?
 ---@field bufnr number? bufnr is used as ID
+---@field buflisted boolean
 ---@field on_stdout fun(job: number, data: string[]?, name:string?)
 ---@field on_stderr fun(job: number, data: string[], name:string)
 ---@field on_exit fun(job: number, exit_code: number?, name:string?)
----@field fallback_on_exit boolean
----@field list boolean
+---@field termlisted boolean
+---@field fallback_on_exit boolean ignored when single is true
 local Terminal = {}
 
 ---Create a new terminal object
@@ -69,12 +70,13 @@ function Terminal:new(term)
   -- if exist then return exist end
   self.__index = self
   term.cmd = term.cmd or vim.o.shell
-  term.fallback_on_exit = vim.F.if_nil(term.fallback_on_exit, opts.fallback_on_exit)
-  term.list = vim.F.if_nil(term.list, true)
+  term.buflisted = vim.F.if_nil(term.buflisted, opts.terminal.buflisted)
+  term.fallback_on_exit = vim.F.if_nil(term.fallback_on_exit, opts.terminal.fallback_on_exit)
+  term.termlisted = vim.F.if_nil(term.termlisted, true)
   setmetatable(term, self)
   if term.bufnr and term.jobid then
     term:__setup_autocmds()
-    if term.list then
+    if term.termlisted then
       term:__attach()
     end
   end
@@ -133,12 +135,13 @@ function Terminal:spawn()
     return
   end
   -- create new empty buffer
-  self.bufnr = vim.api.nvim_create_buf(opts.list_buffers, false)
-  vim.b[self.bufnr].fallback_on_exit = self.fallback_on_exit
+  self.bufnr = vim.api.nvim_create_buf(self.buflisted, false)
   vim.bo[self.bufnr].filetype = filetype
+  vim.b[self.bufnr].fallback_on_exit = self.fallback_on_exit
+  vim.b[self.bufnr].termlisted = self.termlisted
   self:__setup_autocmds()
   -- add to list first (to prevent duplicate from TermOpen)
-  if self.list then
+  if self.termlisted then
     self:__attach()
   end
   -- start terminal in self.bufnr
