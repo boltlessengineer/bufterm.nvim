@@ -1,7 +1,6 @@
 local term     = require('bufterm.terminal')
 local Terminal = require('bufterm.terminal').Terminal
 local config   = require('bufterm.config')
-local ui       = require('bufterm.ui')
 
 local M = {}
 
@@ -41,20 +40,6 @@ function M.setup(conf)
       vim.api.nvim_win_set_buf(0, prev_buf)
     end
   end, {})
-
-  vim.api.nvim_create_user_command('BufTermFloat', function()
-    local t = term.get_recent_term()
-    if not t then
-      t = Terminal:new()
-      t:spawn()
-    end
-    ui.toggle_float(t.bufnr)
-  end, {})
-end
-
-function M.winbar()
-  local count, current = term.count_terms()
-  return string.format('[%d/%d]', current or 0, count)
 end
 
 return M

@@ -19,6 +19,7 @@ M.options = {
 }
 
 M.augroup = vim.api.nvim_create_augroup('BufTerm', {})
+M.filetype = 'BufTerm'
 
 ---setup bufterm plugin config
 ---@param opts BufTermConfig
