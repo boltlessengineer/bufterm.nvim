@@ -1,7 +1,7 @@
 local bufterm = require('bufterm')
 
 bufterm.setup({
-  debug = true,
+  -- debug = true,
   terminal = {
     buflisted = false,
   }

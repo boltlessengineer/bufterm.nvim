@@ -19,13 +19,15 @@ https://user-images.githubusercontent.com/60088301/213930518-37b8fdb1-299a-4c24-
 
 ### Enter & Switch Terminal buffers
 
-Using `:BufTermEnter`, you can enter spawned terminal buffer in *any* windows. Just enter the window you want, and run `:BufTermEnter`
+You can enter terminal buffer in *any* windows. Just enter the window you want, and run `:BufTermEnter`
 
 You can also cycle through terminal buffers with `:BufTermNext` and `:BufTermPrev` commads.
 
 ### Vim8-like Window navigation
 
 Automatically restore the last mode when leaving the terminal buffer.
+
+Window navigation using `<C-w>` key directly in terminal mode just like vim8.
 
 > **Warning**
 > Don't use keymap `<C-\><C-n><C-w>...` or `<C-\><C-o><C-w>...` for window navigation. This will break `remember_mode` feature.
@@ -81,6 +83,18 @@ Create new terminal buffer if there is no terminal buffer running
 
 Cycle through list of terminal buffers
 
+### `Terminal:new(term)`
+
+Create new `Terminal` object. See the [examples](#Tips) below.
+
+### `Terminal:spawn()`
+
+Spawn the terminal buffer. This will spawn new terminal job and create the buffer for it. But not showing the actual buffer in window yet.
+
+### `Terminal:enter(window)`
+
+Open terminal buffer in specific window.
+
 ## Tips
 
 ### Open Lazygit in floating window
@@ -115,3 +129,8 @@ end, {
   desc = 'Toggle floating window with terminal buffers',
 })
 ```
+
+# Inspirations
+
+- [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim)
+- [hydra.nvim](https://github.com/anuvyklack/hydra.nvim)
