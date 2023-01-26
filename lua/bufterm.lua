@@ -1,5 +1,3 @@
-local term     = require('bufterm.terminal')
-local Terminal = require('bufterm.terminal').Terminal
 local config   = require('bufterm.config')
 
 local M = {}
@@ -11,6 +9,9 @@ function M.setup(conf)
 
   require('bufterm.autocmds')
   require('bufterm.keymaps')
+
+  local term     = require('bufterm.terminal')
+  local Terminal = require('bufterm.terminal').Terminal
 
   vim.api.nvim_create_user_command("BufTermEnter", function()
     -- check if current buftype is *NOT* 'terminal'
