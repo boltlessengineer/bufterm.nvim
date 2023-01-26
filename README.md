@@ -85,7 +85,7 @@ Cycle through list of terminal buffers
 
 ### `Terminal:new(term)`
 
-Create new `Terminal` object. See the [examples](#Tips) below.
+Create new `Terminal` object. See the [examples](#Examples) below.
 
 ### `Terminal:spawn()`
 
@@ -95,7 +95,7 @@ Spawn the terminal buffer. This will spawn new terminal job and create the buffe
 
 Open terminal buffer in specific window.
 
-## Tips
+## Examples
 
 ### Open Lazygit in floating window
 
