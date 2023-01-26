@@ -40,10 +40,8 @@ end
 vim.api.nvim_create_autocmd("TermClose", {
   group = augroup,
   callback = function(args)
-    vim.pretty_print('TermClose', args.buf)
       vim.schedule(function()
         if vim.api.nvim_buf_is_loaded(args.buf) then
-          print('buf is loaded')
           if vim.b[args.buf].fallback_on_exit then
           local prev_buf = term.get_prev_buf(args.buf)
           if prev_buf and prev_buf ~= args.buf then
@@ -56,13 +54,7 @@ vim.api.nvim_create_autocmd("TermClose", {
             end
           end
           end
-          print('deleting buffer')
           vim.api.nvim_buf_delete(args.buf, { force = true })
-        else
-          print('buf is NOT loaded')
-          vim.api.nvim_exec_autocmds('BufDelete', {
-            buffer = args.buf,
-          })
         end
       end)
     vim.api.nvim_exec_autocmds("User", {
@@ -84,8 +76,6 @@ vim.api.nvim_create_autocmd('TermOpen', {
       end
       if opts.remember_mode then
         set_mode(args.buf, 't')
-        -- else
-        --   set_mode(args.buf, 'n')
       end
     end
   end),
