@@ -15,7 +15,7 @@ BufTerm NEVER create terminal window on it's own. It only gives you `enter()` fu
 
 ## Features
 
-https://user-images.githubusercontent.com/60088301/213930518-37b8fdb1-299a-4c24-a926-5936cbf3d205.mov
+https://user-images.githubusercontent.com/60088301/214899478-956b4223-c25a-47d7-99db-376d4fa94fd1.mov
 
 ### Enter & Switch Terminal buffers
 
