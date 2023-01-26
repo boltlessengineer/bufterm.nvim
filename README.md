@@ -61,8 +61,8 @@ require('bufterm').setup({
   remember_mode     = true, -- remember vi_mode of terminal buffer
   enable_ctrl_w     = true, -- use <C-w> for window navigating in terminal mode (like vim8)
   terminal = {              -- default terminal settings
-    buflisted         = true, -- whether to set 'buflisted' option
-    fallback_on_exit  = true, -- prevent auto-closing window on terminal exit
+    buflisted         = false, -- whether to set 'buflisted' option
+    fallback_on_exit  = true,  -- prevent auto-closing window on terminal exit
   }
 })
 ```
@@ -106,6 +106,8 @@ local ui       = require('bufterm.ui')
 
 local lazygit = Terminal:new({
   cmd = 'lazygit',
+  buflisted = false,
+  termlisted = false, -- set this option to false if you treat this terminal as single independent terminal
 })
 vim.keymap.set('n', '<leader>g', function()
   -- spawn terminal (terminal won't be spawned if self.jobid is valid)

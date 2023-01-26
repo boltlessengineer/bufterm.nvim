@@ -57,8 +57,8 @@ end
 ---@field on_stdout fun(job: number, data: string[]?, name:string?)
 ---@field on_stderr fun(job: number, data: string[], name:string)
 ---@field on_exit fun(job: number, exit_code: number?, name:string?)
----@field termlisted boolean
----@field fallback_on_exit boolean ignored when single is true
+---@field termlisted boolean set this false if you treat this terminal as single independent terminal.
+---@field fallback_on_exit boolean ignored when termlisted is false
 local Terminal = {}
 
 ---Create a new terminal object
@@ -75,10 +75,7 @@ function Terminal:new(term)
   term.termlisted = vim.F.if_nil(term.termlisted, true)
   setmetatable(term, self)
   if term.bufnr and term.jobid then
-    term:__setup_autocmds()
-    if term.termlisted then
-      term:__attach()
-    end
+    term:__setup()
   end
   return term
 end
@@ -107,8 +104,12 @@ function Terminal:__detach()
 end
 
 ---@private
-function Terminal:__setup_autocmds()
+function Terminal:__setup()
   -- This is executed after TermClose event
+  vim.bo[self.bufnr].filetype = filetype
+  vim.bo[self.bufnr].buflisted = self.buflisted
+  vim.b[self.bufnr].termlisted = self.termlisted
+  vim.b[self.bufnr].fallback_on_exit = self.fallback_on_exit
   vim.api.nvim_create_autocmd("User", {
     group = aug,
     pattern = "__BufTermClose",
@@ -119,7 +120,7 @@ function Terminal:__setup_autocmds()
       end
     end
   })
-  vim.api.nvim_create_autocmd("BufDelete", {
+  vim.api.nvim_create_autocmd("BufUnload", {
     group = aug,
     buffer = self.bufnr,
     once = true,
@@ -127,6 +128,9 @@ function Terminal:__setup_autocmds()
       self:__detach()
     end,
   })
+  if self.termlisted then
+    self:__attach()
+  end
 end
 
 ---Spawn terminal in background
@@ -136,11 +140,7 @@ function Terminal:spawn()
   end
   -- create new empty buffer
   self.bufnr = vim.api.nvim_create_buf(self.buflisted, false)
-  vim.bo[self.bufnr].filetype = filetype
-  vim.b[self.bufnr].fallback_on_exit = self.fallback_on_exit
-  vim.b[self.bufnr].termlisted = self.termlisted
-  self:__setup_autocmds()
-  -- add to list first (to prevent duplicate from TermOpen)
+  self:__setup()
   if self.termlisted then
     self:__attach()
   end
@@ -157,8 +157,6 @@ function Terminal:spawn()
       end,
     }) or nil -- HACK: fallback to ignore nil warning
   end)
-  -- update the terminals list
-  -- self:__add()
 end
 
 ---Open terminal buffer

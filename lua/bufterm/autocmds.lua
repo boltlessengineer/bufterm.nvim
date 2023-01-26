@@ -19,12 +19,8 @@ if opts.save_native_terms then
       local _ = Terminal:new({
         bufnr = args.buf,
         jobid = jobid,
+        termlisted = true,
       })
-      -- set buffer options to make same with bufterm.nvim's terminals
-      vim.bo[args.buf].filetype = conf.filetype
-      vim.bo[args.buf].buflisted = opts.terminal.buflisted
-      vim.b[args.buf].termlisted = true
-      vim.b[args.buf].fallback_on_exit = opts.terminal.fallback_on_exit
     end,
   })
 end
@@ -44,9 +40,11 @@ end
 vim.api.nvim_create_autocmd("TermClose", {
   group = augroup,
   callback = function(args)
-    if vim.b[args.buf].fallback_on_exit then
+    vim.pretty_print('TermClose', args.buf)
       vim.schedule(function()
         if vim.api.nvim_buf_is_loaded(args.buf) then
+          print('buf is loaded')
+          if vim.b[args.buf].fallback_on_exit then
           local prev_buf = term.get_prev_buf(args.buf)
           if prev_buf and prev_buf ~= args.buf then
             vim.api.nvim_set_current_buf(prev_buf)
@@ -57,16 +55,16 @@ vim.api.nvim_create_autocmd("TermClose", {
               vim.api.nvim_feedkeys('A', 'n', false)
             end
           end
+          end
+          print('deleting buffer')
           vim.api.nvim_buf_delete(args.buf, { force = true })
+        else
+          print('buf is NOT loaded')
+          vim.api.nvim_exec_autocmds('BufDelete', {
+            buffer = args.buf,
+          })
         end
       end)
-    else
-      vim.schedule(function()
-        if vim.api.nvim_buf_is_loaded(args.buf) then
-          vim.api.nvim_buf_delete(args.buf, { force = true })
-        end
-      end)
-    end
     vim.api.nvim_exec_autocmds("User", {
       pattern = "__BufTermClose",
       data = {
