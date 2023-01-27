@@ -141,9 +141,6 @@ function Terminal:spawn()
   -- create new empty buffer
   self.bufnr = vim.api.nvim_create_buf(self.buflisted, false)
   self:__setup()
-  if self.termlisted then
-    self:__attach()
-  end
   -- start terminal in self.bufnr
   vim.api.nvim_buf_call(self.bufnr, function()
     self.jobid = vim.fn.termopen(self.cmd, {
