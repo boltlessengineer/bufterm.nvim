@@ -27,8 +27,9 @@ M.augroup = vim.api.nvim_create_augroup('BufTerm', {})
 M.filetype = 'BufTerm'
 
 ---setup bufterm plugin config
----@param opts BufTermConfig
+---@param opts? BufTermConfig
 function M.set(opts)
+  opts = opts or {}
   M.options = vim.tbl_deep_extend('force', M.options, opts)
 end
 

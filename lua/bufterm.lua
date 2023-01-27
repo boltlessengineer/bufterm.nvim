@@ -3,9 +3,9 @@ local config   = require('bufterm.config')
 local M = {}
 
 ---setup bufterm plugin
----@param conf BufTermConfig
-function M.setup(conf)
-  config.set(conf)
+---@param opts? BufTermConfig
+function M.setup(opts)
+  config.set(opts)
 
   require('bufterm.autocmds')
   require('bufterm.keymaps')
