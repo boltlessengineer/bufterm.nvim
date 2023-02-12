@@ -1,6 +1,8 @@
 # Generals
 - [ ] Telescope support
 
+# Options
+
 # UI
 - [ ] handle situation when cycle through terminal buffers in floating-window while they are also opened in normal split windows
     - [ ] just don't allow to open in floating window while it is in split window

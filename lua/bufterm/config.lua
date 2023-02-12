@@ -21,7 +21,7 @@ M.options = {
   terminal = {
     buflisted = true,
     fallback_on_exit = true,
-    auto_close = false,
+    auto_close = true,
   }
 }
 
