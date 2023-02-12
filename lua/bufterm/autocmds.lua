@@ -68,6 +68,7 @@ vim.api.nvim_create_autocmd("TermClose", {
       if vim.b[args.buf].auto_close then
         vim.api.nvim_buf_delete(args.buf, { force = true })
       else
+        -- TODO: remove lock feature
         utils.log("locking terminal")
         vim.cmd.stopinsert()
         set_mode(args.buf, 'n')

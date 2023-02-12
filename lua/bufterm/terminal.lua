@@ -37,9 +37,10 @@ local function remove(buffer)
   end
   local removed = terminals[i]
   for j = i, n - 1 do
-    -- TODO: Terminal:update() updates self & buffer-local variables
     terminals[j] = terminals[j + 1]
+    utils.log('term shift', terminals[j].count, '->', j)
     terminals[j].count = j
+    vim.b[terminals[j].bufnr].terminal_index = j
   end
   terminals[n] = nil
   vim.g.terminal_count = n - 1
@@ -70,16 +71,6 @@ function Terminal:new(term)
   term = term or {}
   utils.log('Terminal:new() for', term.bufnr)
   self.__index = self
-  -- Sync self.count value with buffer variable
-  self.__newindex = function(table, key, value)
-    rawset(table, key, value)
-    local bufnr = table.bufnr
-    if (bufnr and vim.api.nvim_buf_is_valid(bufnr)) then
-      if key == 'count' then
-        vim.b[bufnr].terminal_index = value
-      end
-    end
-  end
   term.cmd = term.cmd or vim.o.shell
   term.buflisted = vim.F.if_nil(term.buflisted, opts.terminal.buflisted)
   term.fallback_on_exit = vim.F.if_nil(term.fallback_on_exit, opts.terminal.fallback_on_exit)
