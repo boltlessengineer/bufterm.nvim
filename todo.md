@@ -1,23 +1,25 @@
 # Generals
-- [ ] Better name
-    - enterm.nvim
-    - bufterm.nvim
-    - enhenced-terminal.nvim
 - [ ] Telescope support
 
 # UI
 - [ ] handle situation when cycle through terminal buffers in floating-window while they are also opened in normal split windows
     - [ ] just don't allow to open in floating window while it is in split window
     - [ ] detect split & enter new terminal buffer
+- [ ] Stable winbar support
+- [ ] mouse support
 
 # Terminal
-- [x] way to handle *single* terminals like `lazygit`
-    - don't fallback to any other terminals
-    - don't be entered from other terminals
 - [ ] support `auto_scroll` (but how? currently only `termopen` can do it)
+- [x] `auto_close=false` option to support terminal jobs like `build`, `run` things.
+    - don't detach terminal when `TermClose`. detach when `BufDelete`
+    - remember terminal buffers even jobs are finished
+
+# Group
+- Group buffers feature
+- People can open specical window containing all terminal/quickrun related buffers
+- This works similar to VSC's integrated terminal window
 
 # Keymap/Vi-mode
-- [ ] Seperate Keymap feature as other plugin. Leave only Vi-mode feature
 - [ ] startinsert() inside `TermClose` autocmd (current way is HACK)
 
 # Bug

@@ -1,7 +1,7 @@
 local bufterm = require('bufterm')
 
 bufterm.setup({
-  -- debug = true,
+  debug = false,
   terminal = {
     buflisted = false,
   }
@@ -31,4 +31,36 @@ vim.keymap.set({ 'n', 't' }, [[<C-t>]], function ()
     term:spawn()
   end
   ui.toggle_float(term.bufnr)
+end)
+local bat = Terminal:new({
+        cmd = function()
+          local runner = {
+            python = 'python3 %',
+            go = 'go run %',
+            sh = 'sh %',
+            fish = 'fish %',
+          }
+          local cmd = runner[vim.bo.filetype]
+          if not cmd then
+            return vim.o.shell
+          end
+          cmd = cmd:gsub('%%', vim.fn.expand('%'))
+          return cmd
+        end,
+        fallback_on_exit = false,
+        auto_close = false,
+        buflisted = true,
+        termlisted = true,
+    })
+local bat_win = ui.Window:new()
+vim.keymap.set('n', '<leader>r', function()
+  -- re-run process if buffer is visible
+  if bat.bufnr and vim.fn.bufwinid(bat.bufnr) > 0 then
+    bat:run()
+    return
+  end
+  -- open new window (or get existing window-id)
+  local winid = bat_win:open(bat.bufnr)
+  -- enter job
+  bat:enter(winid)
 end)

@@ -34,29 +34,46 @@ local function get_mode(buf)
   return vim.b[buf][term_mode_var]
 end
 
+local function disable_insert(buf)
+  vim.api.nvim_create_autocmd('TermEnter', {
+    group = augroup,
+    buffer = buf,
+    callback = function ()
+      vim.cmd.stopinsert()
+    end
+  })
+end
+
 -- TODO: what if user manually :bdelete!?
 -- -> user just should not manually :bdelete
 -- -> actually that's :bdelete's default behavior (same with normal files)
 vim.api.nvim_create_autocmd("TermClose", {
   group = augroup,
   callback = function(args)
-      vim.schedule(function()
-        if vim.api.nvim_buf_is_loaded(args.buf) then
-          if vim.b[args.buf].fallback_on_exit then
-          local prev_buf = term.get_prev_buf(args.buf)
-          if prev_buf and prev_buf ~= args.buf then
-            vim.api.nvim_set_current_buf(prev_buf)
-            -- HACK: hack from u/pysan3
-            -- maybe `:h autocmd-nested` can be help?
-            if get_mode(prev_buf) == 't' then
-              utils.log('feedkeys    after TermClose')
-              vim.api.nvim_feedkeys('A', 'n', false)
-            end
+    vim.schedule(function()
+      if not vim.api.nvim_buf_is_loaded(args.buf) then
+        return
+      end
+      if vim.b[args.buf].fallback_on_exit then
+        local prev_buf = term.get_prev_buf(args.buf)
+        if prev_buf and prev_buf ~= args.buf then
+          vim.api.nvim_set_current_buf(prev_buf)
+          -- HACK: hack from u/pysan3
+          -- maybe `:h autocmd-nested` can be help?
+          if get_mode(prev_buf) == 't' then
+            vim.api.nvim_feedkeys('A', 'n', false)
           end
-          end
-          vim.api.nvim_buf_delete(args.buf, { force = true })
         end
-      end)
+      end
+      if vim.b[args.buf].auto_close then
+        vim.api.nvim_buf_delete(args.buf, { force = true })
+      else
+        utils.log("locking terminal")
+        vim.cmd.stopinsert()
+        set_mode(args.buf, 'n')
+        disable_insert(args.buf)
+      end
+    end)
     vim.api.nvim_exec_autocmds("User", {
       pattern = "__BufTermClose",
       data = {
@@ -97,6 +114,9 @@ if opts.remember_mode then
     group = augroup,
     pattern = 'term://*',
     callback = vim.schedule_wrap(function(args)
+      if args.buf ~= vim.api.nvim_get_current_buf() then
+        return
+      end
       if get_mode(args.buf) == 'n' then
         utils.log('stopinsert  in BufEnter')
         vim.cmd.stopinsert()

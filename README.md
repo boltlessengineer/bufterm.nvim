@@ -132,6 +132,34 @@ end, {
 })
 ```
 
+### Run & update processes
+
+```lua
+local term = require('bufterm.terminal')
+local Terminal = require('bufterm.terminal').Terminal
+
+local c_run = Terminal:new({
+  cmd = function()
+    local cmd = 'bat %'
+    return cmd:gsub('%%', vim.fn.expand('%'))
+  end,
+  fallback_on_exit = false,
+  auto_close = false,
+  buflisted = true,
+  termlisted = true,
+})
+
+vim.keymap.set('n', '<leader>r', function()
+  if not c_run.bufnr then
+    -- open process in new window first
+    c_run:enter()
+  else
+    -- re-run process
+    c_run:run()
+  end
+end)
+```
+
 # Inspirations
 
 - [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim)

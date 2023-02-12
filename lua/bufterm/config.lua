@@ -3,6 +3,7 @@ local M = {}
 ---@class BufTermTerminalConfig
 ---@field buflisted boolean
 ---@field fallback_on_exit boolean
+---@field auto_close boolean
 
 ---@class BufTermConfig
 ---@field debug boolean
@@ -20,6 +21,7 @@ M.options = {
   terminal = {
     buflisted = true,
     fallback_on_exit = true,
+    auto_close = false,
   }
 }
 
