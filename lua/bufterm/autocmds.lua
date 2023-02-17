@@ -8,11 +8,16 @@ local utils    = require('bufterm.utils')
 if opts.save_native_terms then
   vim.api.nvim_create_autocmd("TermOpen", {
     group = augroup,
-    callback = function(args)
-      -- check if current buffer is already configured to prevent duplicate
+    -- schedule to get proper buffer options
+    callback = vim.schedule_wrap(function(args)
       if vim.bo[args.buf].filetype == conf.filetype then
+        -- check if current buffer is already configured to prevent duplicate
+        return
+      elseif not vim.bo[args.buf].buflisted then
+        -- ignore buffers already unlisted (those may be not interactive ones)
         return
       end
+      utils.log("Saving native terminal")
       -- create new Terminal object with scanned informations
       local ok, jobid = pcall(vim.fn.jobpid, vim.bo[args.buf].channel)
       if not ok then return end
@@ -21,7 +26,7 @@ if opts.save_native_terms then
         jobid = jobid,
         termlisted = true,
       })
-    end,
+    end),
   })
 end
 
@@ -44,9 +49,6 @@ local function disable_insert(buf)
   })
 end
 
--- TODO: what if user manually :bdelete!?
--- -> user just should not manually :bdelete
--- -> actually that's :bdelete's default behavior (same with normal files)
 vim.api.nvim_create_autocmd("TermClose", {
   group = augroup,
   callback = function(args)
