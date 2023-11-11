@@ -15,7 +15,7 @@ vim.g.terminal_count = 0
 ---get Terminal object's index from list by buffer
 ---@param buffer number
 ---@return number|nil
-local function get_index(buffer)
+function M.get_index(buffer)
   if buffer == 0 then
     buffer = vim.api.nvim_get_current_buf()
   end
@@ -30,7 +30,7 @@ end
 -- remove termianl buffer from list
 -- update all terminals with changed index
 local function remove(buffer)
-  local i = get_index(buffer)
+  local i = M.get_index(buffer)
   local n = #terminals
   if (not i) or (i < 0 or i > n) then
     return nil
@@ -92,7 +92,7 @@ end
 ---Add Terminal to list
 ---@private
 function Terminal:__attach()
-  if get_index(self.bufnr) then return end
+  if M.get_index(self.bufnr) then return end
   utils.log('Terminal:__attach() for', self.bufnr)
   table.insert(terminals, self)
   vim.g.terminal_count = #terminals
@@ -213,7 +213,7 @@ function M.get_recent_term()
 end
 
 function M.get_next_buf(buffer)
-  local cur = get_index(buffer)
+  local cur = M.get_index(buffer)
   if not cur then return nil end
   local i = cur + 1
   if i > #terminals then
@@ -224,7 +224,7 @@ function M.get_next_buf(buffer)
 end
 
 function M.get_prev_buf(buffer)
-  local cur = get_index(buffer)
+  local cur = M.get_index(buffer)
   if not cur then return nil end
   local i = cur - 1
   if i < 1 then
